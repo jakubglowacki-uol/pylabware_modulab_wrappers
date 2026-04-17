@@ -1,0 +1,179 @@
+"""Modulab wrapper for Heidolph Hei-Torque 100 (PyLabware)."""
+
+from __future__ import annotations
+
+from typing import Any, Dict, List
+
+from modulab_coordinator.driver_templates.simple import (
+    SimpleDriverTemplate,
+    build_simple_template,
+    capability,
+)
+
+from modulab_modules._pylabware_common import PylabwareModuleMixin
+
+
+class HeidolphHeiTorque100PrecisionTemplate(PylabwareModuleMixin, SimpleDriverTemplate):
+    """Thread-executor Modulab wrapper around HeiTorque100PrecisionStirrer."""
+
+    # 1) Module identity and metadata
+    template_id = "pylabware.heidolph_hei_torque_100_precision"
+    interface_id = "ICustomDevice"
+    display_name = "Heidolph Hei-Torque 100"
+    version = "1.0.0"
+    description = "PyLabware-backed Modulab wrapper for Heidolph Hei-Torque 100."
+    vendor = "PyLabware"
+    model = "HeiTorque100PrecisionStirrer"
+    default_name = "Heidolph Hei-Torque 100"
+    tags = ("pylabware", "wrapper", "lab-device")
+    metadata = {
+        "subtype": "pylabware_wrapper",
+        "driver_type": "python_wrapper",
+        "interface_version": "1.0",
+        "wrapper_style": "thread_executor",
+    }
+
+    # 2) Connection and configuration schema
+    connection_type = "serial"
+    connection_param_schema = {
+        "connection_mode": {
+            "type": "string",
+            "description": "PyLabware connection mode.",
+            "required": False,
+            "default": "serial",
+        },
+        "address": {
+            "type": "string",
+            "description": "Device network address (for tcp/http drivers).",
+            "required": False,
+            "default": "",
+        },
+        "host": {
+            "type": "string",
+            "description": "Alias for address.",
+            "required": False,
+            "default": "",
+        },
+        "port": {
+            "type": "string",
+            "description": "Network or serial port.",
+            "required": False,
+            "default": "",
+        },
+        "serial_port": {
+            "type": "string",
+            "description": "Alias for serial port.",
+            "required": False,
+            "default": "",
+        },
+        "username": {
+            "type": "string",
+            "description": "Optional username for authenticated devices.",
+            "required": False,
+            "default": "",
+        },
+        "password": {
+            "type": "string",
+            "description": "Optional password for authenticated devices.",
+            "required": False,
+            "default": "",
+        },
+        "verify_ssl": {
+            "type": "boolean",
+            "description": "Enable SSL verification for HTTP drivers.",
+            "required": False,
+            "default": False,
+        },
+    }
+
+    driver_param_schema = {
+        "command_timeout_s": {
+            "type": "float",
+            "description": "Timeout for individual blocking driver method calls.",
+            "required": False,
+            "default": 20.0,
+        },
+        "device_name": {
+            "type": "string",
+            "description": "Optional PyLabware device name override.",
+            "required": False,
+            "default": "Heidolph Hei-Torque 100",
+        },
+        "switch_address": {
+            "type": "string",
+            "description": "Optional switch address for Tricontinent pumps.",
+            "required": False,
+            "default": "",
+        },
+        "valve_type": {
+            "type": "string",
+            "description": "Optional valve type for Tricontinent pumps.",
+            "required": False,
+            "default": "3PORT_DISTR_IOBE",
+        },
+    }
+
+    # 3) Instance state initialization
+    PYLABWARE_MODULE = "PyLabware.devices.heidolph_hei_torque_100_precision"
+    PYLABWARE_CLASS = "HeiTorque100PrecisionStirrer"
+    DEFAULT_CONNECTION_MODE = "serial"
+
+    def __init__(self, **kwargs: Dict[str, Any]) -> None:
+        super().__init__(**kwargs)
+        self._init_pylabware_runtime()
+        self.mark_disconnected(info=self._connection_info(), extra={"driver_class": self.PYLABWARE_CLASS})
+
+    # 4) Lifecycle hooks
+    def connect(self) -> None:
+        self._connect_pylabware()
+
+    def disconnect(self) -> None:
+        self._disconnect_pylabware()
+
+    # 5) Capabilities
+    @capability("get_status", exclusive=False)
+    def _handle_get_status(self, _params: Dict[str, Any]) -> Dict[str, Any]:
+        status = self._status_snapshot()
+        self.update_status_extra({"pylabware": status})
+        return {"success": True, **status}
+
+    @capability(
+        "invoke_method",
+        inputs={
+            "method": {"type": "string", "description": "PyLabware method name", "required": True},
+            "args": {"type": "array", "description": "Positional arguments", "required": False},
+            "kwargs": {"type": "object", "description": "Keyword arguments", "required": False},
+        },
+    )
+    def _handle_invoke_method(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        method = str(params.get("method") or "").strip()
+        if not method:
+            raise ValueError("method is required")
+        args = params.get("args") or []
+        kwargs = params.get("kwargs") or {}
+        if not isinstance(args, list):
+            raise ValueError("args must be a list")
+        if not isinstance(kwargs, dict):
+            raise ValueError("kwargs must be an object")
+        result = self._call_driver(method, *args, **kwargs)
+        return {"success": True, "method": method, "result": result}
+
+    @capability("start_operation")
+    def _handle_start_operation(self, _params: Dict[str, Any]) -> Dict[str, Any]:
+        method = self._start_operation()
+        return {"success": True, "method": method}
+
+    @capability("stop_operation")
+    def _handle_stop_operation(self, _params: Dict[str, Any]) -> Dict[str, Any]:
+        method = self._stop_operation()
+        return {"success": True, "method": method}
+
+    # 6) Internal helpers and telemetry sync
+    def _sync_status(self) -> None:
+        snapshot = self._status_snapshot()
+        self.update_status_extra({"pylabware": snapshot})
+
+
+DRIVER_TEMPLATE = build_simple_template(HeidolphHeiTorque100PrecisionTemplate)
+
+__all__: List[str] = ["DRIVER_TEMPLATE"]
