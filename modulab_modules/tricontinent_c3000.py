@@ -18,7 +18,7 @@ class TricontinentC3000Template(PylabwareModuleMixin, SimpleDriverTemplate):
 
     # 1) Module identity and metadata
     template_id = "pylabware.tricontinent_c3000"
-    interface_id = "ICustomDevice"
+    interface_id = "ILiquidDispenser"
     display_name = "Tricontinent C3000"
     version = "1.0.0"
     description = "PyLabware-backed Modulab wrapper for Tricontinent C3000."
@@ -38,51 +38,21 @@ class TricontinentC3000Template(PylabwareModuleMixin, SimpleDriverTemplate):
     connection_param_schema = {
         "connection_mode": {
             "type": "string",
-            "description": "PyLabware connection mode.",
+            "description": "PyLabware connection mode (typically serial or tcp).",
             "required": False,
             "default": "serial",
         },
         "address": {
             "type": "string",
-            "description": "Device network address (for tcp/http drivers).",
-            "required": False,
-            "default": "",
-        },
-        "host": {
-            "type": "string",
-            "description": "Alias for address.",
+            "description": "Device address or host, depending on connection mode.",
             "required": False,
             "default": "",
         },
         "port": {
             "type": "string",
-            "description": "Network or serial port.",
+            "description": "Device port (serial device path or TCP port).",
             "required": False,
             "default": "",
-        },
-        "serial_port": {
-            "type": "string",
-            "description": "Alias for serial port.",
-            "required": False,
-            "default": "",
-        },
-        "username": {
-            "type": "string",
-            "description": "Optional username for authenticated devices.",
-            "required": False,
-            "default": "",
-        },
-        "password": {
-            "type": "string",
-            "description": "Optional password for authenticated devices.",
-            "required": False,
-            "default": "",
-        },
-        "verify_ssl": {
-            "type": "boolean",
-            "description": "Enable SSL verification for HTTP drivers.",
-            "required": False,
-            "default": False,
         },
     }
 
@@ -101,13 +71,13 @@ class TricontinentC3000Template(PylabwareModuleMixin, SimpleDriverTemplate):
         },
         "switch_address": {
             "type": "string",
-            "description": "Optional switch address for Tricontinent pumps.",
+            "description": "Switch address used by daisy-chained Tricontinent pumps.",
             "required": False,
             "default": "",
         },
         "valve_type": {
             "type": "string",
-            "description": "Optional valve type for Tricontinent pumps.",
+            "description": "Configured valve type for the connected pump head.",
             "required": False,
             "default": "3PORT_DISTR_IOBE",
         },
