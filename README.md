@@ -1,7 +1,11 @@
 ![PyLabware](docs/images/_static/logo_with_text_600px.png)
 ============
 
-This is a simple Python 3 library to control the common range of the hardware found in the chemistry labs - hotplates, stirrers, rotary evaporators, vacuum pumps etc. using a common interface.
+This fork is packaged as Modulab wrappers for PyLabware drivers.
+
+The `modulab_modules/` directory provides Modulab `DRIVER_TEMPLATE` modules that wrap PyLabware device classes so they can be added and imported through Modulab module sources.
+
+PyLabware remains the underlying driver layer for hardware communication.
 
 ---
 
